@@ -167,7 +167,7 @@ public class SubroutineDanger {
 		if (ffm <= 1) {
 			ffm = 1;
 		} else {
-			ffm = ffm + (iherb - 1) * 5;
+			ffm = ffm + (iherb - 1) * 0.05;
 		}
 	}
 
@@ -194,6 +194,7 @@ public class SubroutineDanger {
 	 * Two formulas are necessary to calculate grass and timber indices according to windspeed.
 	 * 
 	 * @param wind Test to see if windspeed is greater than 14 mph. 
+	 * @param  
 	 * 
 	 */
 	public void setGrassTimber(double wind) {
@@ -201,31 +202,29 @@ public class SubroutineDanger {
 			grass = 1;
 			timber = 1;
 		} else {
-			if (wind >= 14 && grass <= 0 && timber < .99) {
+			if (wind >= 14 && grass <= 0 && timber <= 0) {
 				grass = 0.00918 * (wind + 14) * (.33 - adfm) * 1.65 - 3;
 				timber = 0.00918 * (wind + 14) * (.33 - adfm) * 1.65 - 3;
-			}
-			if (grass > .99 && timber > .99) {
-				grass = .99;
-				timber = .99;
-			}
-
-			else {
+				if (grass > .99 && timber > .99) {
+					grass = .99;
+					timber = .99;
+				}
+			} else {
 				grass = 0.01312 * (wind + 6) * (.33 - adfm) * 1.65 - 3;
 				timber = 0.01312 * (wind + 6) * (.33 - adfm) * 1.65 - 3;
-			}
-			if (timber <= 0) {
-				timber = 1;
-			}
-			if (grass < 0) {
-				grass = 1;
-			}
-			if (grass == 0) {
-				grass = 0;
-			}
 
+				if (timber <= 0) {
+					timber = 1;
+				}
+				if (grass < 0) {
+					grass = 1;
+				}
+				if (grass == 0) {
+					grass = 0;
+				}
+
+			}
 		}
-
 	}
 
 	/**
