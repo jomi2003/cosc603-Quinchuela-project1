@@ -8,23 +8,20 @@
  * buo,		the last value of the build up index
  * iherb,	the current herb state of the district 1=cured, 2=transition, 3=green
  * Data returned from the subroutine are:
- * Drying Factor as 							df
- * Fine Fuel Moisture as 						ffm
- * Adjusted (10 day lag) Fuel Moisture as 		adfm
- * Grass Spread Index as 						grass
- * Timber Spread Index as 						timber
- * Fire Load Rating (man hour base) as 			fload
- * Build Up Index as 							bui
+ * Drying Factor as 						df
+ * Fine Fuel Moisture as 					ffm
+ * Adjusted (10 day lag) Fuel Moisture as 	adfm
+ * Grass Spread Index as 					grass
+ * Timber Spread Index as 					timber
+ * Fire Load Rating (man hour base) as 		fload
+ * Build Up Index as 						bui
  * 
  */
 
 /**
- * @author JQ  
- * @version 1.0 
+ * @author Jose Quinchuela    <a href="mailto: jquinc1@students.towson.edu>"
+ * @version 1.0.0 
  */
-
-import java.lang.reflect.Array;
-import java.math.*;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -34,9 +31,13 @@ import java.math.*;
 public class SubroutineDanger {
 
 	/**
-	 * Drying Factor as df Fine Fuel Moisture as ffm Adjusted (10 day lag) Fuel
-	 * Moisture as adfm Grass Spread Index as grass Timber Spread Index as
-	 * timber Fire Load Rating (man hour base) as fload Build Up Index as bui
+	 * Drying Factor as df 
+	 * Fine Fuel Moisture as ffm 
+	 * Adjusted (10 day lag) Fuel Moisture as adfm 
+	 * Grass Spread Index as grass 
+	 * Timber Spread Index as timber 
+	 * Fire Load Rating (man hour base) as fload 
+	 * Build Up Index as bui
 	 */
 	double df, ffm, adfm, grass, timber, fload, bui;
 
@@ -53,11 +54,11 @@ public class SubroutineDanger {
 	double[] B = { -.1859, -.0859, -0.579, -.0774 };
 
 	/** C comprises the range of dry-wet indicators */
-	double[] C = { 4.5, 12.5, 27.5 }; // drywet indicators for ffm
+	double[] C = { 4.5, 12.5, 27.5 }; 
 
 	/** D comprises the dryfactor indicator */
-	double[] D = { 16.0, 10.0, 7.0, 5.0, 4.0, 3.0 }; // dryfactor indicators for
-														// dryFactor method.
+	double[] D = { 16.0, 10.0, 7.0, 5.0, 4.0, 3.0 }; 
+														
 
 	/**
 	 * Instantiates a new subroutine danger.
@@ -73,11 +74,11 @@ public class SubroutineDanger {
 	public SubroutineDanger(double dry, double wet, boolean isnow, double precip, double wind, double buo, int iherb) {
 		// initialize all indices to 0
 		this.df = this.grass = this.timber = this.fload = this.bui = 0.0;
-		this.ffm = this.adfm = 0.99;
+		this.ffm = this.adfm = 99;
 		this.buo = buo;
 
-		// isnow is positive if there is snow
-		if (isnow) {
+		// isnow is positive or true if there is snow.
+		if (isnow == true) {
 			grass = 0;
 			timber = 0;
 			setBuildUpIndex(precip);
@@ -86,7 +87,7 @@ public class SubroutineDanger {
 			calculateDryingFactor();
 			adjustFFMForHerb(iherb);
 			setBuildUpIndex(precip);
-			adjustBUOByDryingFactor();
+			adjustBUIByDryingFactor();
 			setADFM();
 			setGrassTimber(wind);
 			if (timber > 0 && bui > 0) {
@@ -106,10 +107,16 @@ public class SubroutineDanger {
 	// equaled to 0.1 inches
 	public void setBuildUpIndex(double precip) {
 		if (precip > 0.1) {
-			bui = -50 * ((Math.log((1 - (-1.0 * Math.exp(buo / 50))))) * Math.exp(1.175) * precip);
-			if (bui < 0) {
-				bui = 0;
+			if (bui >= 0){
+			bui = -50 * Math.log(1 - (1 - Math.exp((-1.0)*buo/50)) * Math.exp(((-1.0)*1.175) * (precip - 0.1)));
 			}
+			else if (bui < 0) {
+				bui = 0;
+			}	
+		}
+		else {
+			grass =  0;
+			timber = 0;
 		}
 	}
 
@@ -139,7 +146,7 @@ public class SubroutineDanger {
 			a = A[3];
 			b = B[3];
 		}
-
+		//a and b values are switched due to a glitch in the original code.
 		ffm = a * Math.exp(b) * dif;
 	}
 
@@ -164,10 +171,12 @@ public class SubroutineDanger {
 	 * @param iherb the herb state is used to adjust the calculated ffm by adding 5 percent for transition stage.
 	 */
 	public void adjustFFMForHerb(double iherb) {
-		if (ffm <= 1) {
+		if ((ffm - 1) < 0) {
 			ffm = 1;
-		} else {
-			ffm = ffm + (iherb - 1) * 0.05;
+		} 
+		else 
+			{
+			ffm = ffm + (iherb - 1) * 5;
 		}
 	}
 
@@ -175,7 +184,7 @@ public class SubroutineDanger {
 	 * Adjust bui by adding the drying factor. After correction for rain, the
 	 * drying factor is added to obtain the current buildup index
 	 */
-	public void adjustBUOByDryingFactor() {
+	public void adjustBUIByDryingFactor() {
 		bui = buo + df;
 	}
 
@@ -185,7 +194,7 @@ public class SubroutineDanger {
 	 * natural logs.
 	 */
 	public void setADFM() {
-		adfm = 0.9 * ffm + 0.5 + 9.5 * Math.exp(-1.0 * bui / 50);
+		adfm = 0.9 * ffm + 0.5 + 9.5 * Math.exp((-1.0 * bui)/ 50);
 	}
 
 	/**
@@ -193,8 +202,7 @@ public class SubroutineDanger {
 	 * than 30 percent, the timber and grass spread indices are set to 1. 
 	 * Two formulas are necessary to calculate grass and timber indices according to windspeed.
 	 * 
-	 * @param wind Test to see if windspeed is greater than 14 mph. 
-	 * @param  
+	 * @param wind Test to see if windspeed is greater than 14 mph.  
 	 * 
 	 */
 	public void setGrassTimber(double wind) {
@@ -202,17 +210,19 @@ public class SubroutineDanger {
 			grass = 1;
 			timber = 1;
 		} else {
-			if (wind >= 14 && grass <= 0 && timber <= 0) {
-				grass = 0.00918 * (wind + 14) * (.33 - adfm) * 1.65 - 3;
-				timber = 0.00918 * (wind + 14) * (.33 - adfm) * 1.65 - 3;
-				if (grass > .99 && timber > .99) {
-					grass = .99;
-					timber = .99;
+			if (wind >= 14){
+				if(grass <= 0 && timber <= 0){
+				grass = 0.00918 * (wind + 14) * Math.pow((33 - adfm), (1.65)) - 3;
+				timber = 0.00918 * (wind + 14) * Math.pow((33 - ffm), (1.65)) - 3;
+				}
+				if (grass > 99 && timber > 99) {
+					grass = 99;
+					timber = 99;
 				}
 			} else {
-				grass = 0.01312 * (wind + 6) * (.33 - adfm) * 1.65 - 3;
-				timber = 0.01312 * (wind + 6) * (.33 - adfm) * 1.65 - 3;
-
+				grass = 0.01312 * (wind + 6) * Math.pow((33 - adfm), (1.65)) - 3;
+				timber = 0.01312 * (wind + 6) * Math.pow((33 - ffm), (1.65)) - 3;
+				//this could also work with timber < 1 
 				if (timber <= 0) {
 					timber = 1;
 				}
@@ -232,15 +242,11 @@ public class SubroutineDanger {
 	 * If either timber or buildup spread indices are zero, fire load index is zero.
 	 */
 	public void setFload() {
-		if (timber > 0 && bui > 0) {
 			fload = 1.75 * Math.log10(timber) + 0.32 * Math.log10(bui) - 1.640;
-			if (fload < 0) {
+			if (fload <= 0) {
 				fload = 0;
 			} else {
-				fload = 10 * fload;
-			}
-		} else if (timber == 0 && bui == 0) {
-			fload = 0;
+				fload = Math.pow(10, fload);
+			}		
 		}
 	}
-}
