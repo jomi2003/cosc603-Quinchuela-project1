@@ -30,6 +30,12 @@
  */
 public class SubroutineDanger {
 
+	private SubroutineDangerProductD subroutineDangerProductD = new SubroutineDangerProductD();
+
+	private SubroutineDangerProductB subroutineDangerProductB = new SubroutineDangerProductB();
+
+	private SubroutineDangerProductA subroutineDangerProductA = new SubroutineDangerProductA();
+
 	/**
 	 * Drying Factor as df 
 	 * Fine Fuel Moisture as ffm 
@@ -47,18 +53,8 @@ public class SubroutineDanger {
 	/** The precipitation factor. */
 	double precip;
 
-	/** A comprises the piecewise regression coeficient indicators */
-	double[] A = { 30.0, 19.2, 13.8, 22.5 };
-
-	/** B comprises the piecewise regression coeficient indicators */
-	double[] B = { -.1859, -.0859, -0.579, -.0774 };
-
 	/** C comprises the range of dry-wet indicators */
 	double[] C = { 4.5, 12.5, 27.5 }; 
-
-	/** D comprises the dryfactor indicator */
-	double[] D = { 16.0, 10.0, 7.0, 5.0, 4.0, 3.0 }; 
-														
 
 	/**
 	 * Instantiates a new subroutine danger.
@@ -84,7 +80,7 @@ public class SubroutineDanger {
 			setBuildUpIndex(precip);
 		} else {
 			setFineFuelMoisture(dry, wet);
-			calculateDryingFactor();
+			subroutineDangerProductD.calculateDryingFactor(this, ffm);
 			adjustFFMForHerb(iherb);
 			setBuildUpIndex(precip);
 			adjustBUIByDryingFactor();
@@ -130,22 +126,9 @@ public class SubroutineDanger {
 	// method that calculates fine fuel moisture according to dry and wet bulb
 	// values
 	public void setFineFuelMoisture(double dry, double wet) {
+		double a = subroutineDangerProductA.a(dry, wet);
+		double b = subroutineDangerProductB.b(dry, wet);
 		double dif = dry - wet;
-		double a = 0;
-		double b = 0;
-		if (dif < 4.5) {
-			a = A[0];
-			b = B[0];
-		} else if (dif < 12.5) {
-			a = A[1];
-			b = B[1];
-		} else if (dif < 27.5) {
-			a = A[2];
-			b = B[2];
-		} else {
-			a = A[3];
-			b = B[3];
-		}
 		//a and b values are switched due to a glitch in the original code.
 		ffm = a * Math.exp(b) * dif;
 	}
@@ -156,13 +139,7 @@ public class SubroutineDanger {
 	 */
 	// method that calculates the drying factor
 	public void calculateDryingFactor() {
-		for (int i = 1; i <= 6; i++) {
-			if (ffm - D[i - 1] > 0) {
-				df = i - 1;
-				return;
-			}
-		}
-		df = 7;
+		subroutineDangerProductD.calculateDryingFactor(this, ffm);
 	}
 
 	/**
@@ -206,7 +183,7 @@ public class SubroutineDanger {
 	 * 
 	 */
 	public void setGrassTimber(double wind) {
-		if (adfm >= 0.30 && ffm >= 0.30) {
+		if (adfm >= 30 && ffm >= 30) {
 			grass = 1;
 			timber = 1;
 		} else {
@@ -249,4 +226,8 @@ public class SubroutineDanger {
 				fload = Math.pow(10, fload);
 			}		
 		}
+
+	public void setDf(double df) {
+		this.df = df;
+	}
 	}
